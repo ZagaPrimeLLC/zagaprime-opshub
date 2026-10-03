@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const PUBLIC = ['/login', '/api/login', '/api/health'];
+const PUBLIC = ['/login', '/api/login', '/api/health', '/api/feed-health'];
 
 async function expectedToken(secret) {
   const data = new TextEncoder().encode('opshub:' + secret);
@@ -26,5 +26,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|brand/|robots.txt).*)'],
 };

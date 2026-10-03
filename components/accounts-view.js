@@ -1,19 +1,27 @@
 'use client';
-import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { Pchip, Ext } from '@/components/bits';
 import { EntityForm } from '@/components/crud';
 
-export default function AccountsView({ initial }) {
+export default function AccountsView({ initial, params }) {
   const [accounts, setAccounts] = useState(initial.accounts);
   const [providers, setProviders] = useState(initial.providers);
-  const [filter, setFilter] = useState('');
-  const [editing, setEditing] = useState(null); // account slug | 'new' | 'new-provider'
+  const [filter, setFilter] = useState(params.q || '');
+  const [editing, setEditing] = useState(null);
   const resources = initial.resources;
   const projects = initial.projects;
 
   const q = filter.trim().toLowerCase();
   const match = (...f) => !q || f.some((x) => String(x ?? '').toLowerCase().includes(q));
   const projBy = useMemo(() => Object.fromEntries(projects.map((p) => [p.slug, p])), [projects]);
+
+  useEffect(() => {
+    const id = params.focus ? `a-${params.focus}` : params.provider ? `prov-${params.provider}` : null;
+    if (!id) return;
+    const t = setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    return () => clearTimeout(t);
+  }, [params.focus, params.provider]);
 
   const providerOptions = providers.map((p) => ({ v: p.slug, l: p.name }));
   const accFields = [
@@ -43,24 +51,34 @@ export default function AccountsView({ initial }) {
   function deletedAcc(row) { setAccounts((as) => as.filter((a) => a.slug !== row.slug)); setEditing(null); }
   function savedProv(row) { setProviders((ps) => [...ps.filter((p) => p.slug !== row.slug), row].sort((a, b) => a.name.localeCompare(b.name))); setEditing(null); }
 
+  const passes = (a, P) =>
+    (!params.missing || (params.missing === 'bitwarden' && !a.bitwarden_url)) &&
+    (match(a.label, a.login_hint, a.notes, P.name) || resources.some((r) => r.account_slug === a.slug && match(r.name, r.external_ref)));
+
   function acard(a) {
     const res = resources.filter((r) => r.account_slug === a.slug);
     const projSlugs = [...new Set(res.map((r) => r.project_slug).filter(Boolean))];
+    const focused = params.focus === a.slug ? ' focused' : '';
     if (editing === a.slug) {
       return (
-        <div className="acard" key={a.slug} style={{ padding: 0, overflow: 'hidden' }}>
+        <div className={`acard${focused}`} key={a.slug} id={`a-${a.slug}`} style={{ padding: 0, overflow: 'hidden' }}>
           <EntityForm entity="accounts" row={a} fields={accFields} pk="slug"
             onSaved={savedAcc} onCancel={() => setEditing(null)} onDeleted={deletedAcc} />
         </div>
       );
     }
     return (
-      <div className="acard" key={a.slug}>
+      <div className={`acard${focused}`} key={a.slug} id={`a-${a.slug}`}>
         <div className="alabel">{a.label}</div>
         <div className="alogin">{a.login_hint || '—'}</div>
         {a.notes && <div className="anote">{a.notes}</div>}
         {res.length > 0 && (
-          <div className="aprojects"><b>{res.length}</b> resources · used by {projSlugs.length ? projSlugs.map((s) => projBy[s]?.name || s).join(', ') : '—'}</div>
+          <div className="aprojects">
+            <b>{res.length}</b> resources · used by{' '}
+            {projSlugs.length
+              ? projSlugs.map((s, i) => <span key={s}>{i > 0 && ', '}<Link href={`/projects?focus=${s}`}>{projBy[s]?.name || s}</Link></span>)
+              : '—'}
+          </div>
         )}
         <div className="abtns">
           {a.console_url && <a className="btn sm" href={a.console_url} target="_blank" rel="noopener noreferrer">Console <Ext /></a>}
@@ -74,16 +92,16 @@ export default function AccountsView({ initial }) {
   }
 
   const sections = providers.map((P) => {
-    const accs = accounts.filter((a) => a.provider_slug === P.slug && (match(a.label, a.login_hint, a.notes, P.name) || resources.some((r) => r.account_slug === a.slug && match(r.name, r.external_ref))));
-    if (!accs.length && q) return null;
+    const accs = accounts.filter((a) => a.provider_slug === P.slug && passes(a, P));
     const total = accounts.filter((a) => a.provider_slug === P.slug).length;
-    if (!total && q) return null;
+    if (!accs.length && (q || params.missing)) return null;
+    const focused = params.provider === P.slug ? ' focused' : '';
     return (
-      <div className="provsec" key={P.slug}>
+      <div className={`provsec${focused}`} key={P.slug} id={`prov-${P.slug}`} style={focused ? { borderRadius: 14, padding: 10 } : undefined}>
         <div className="provhead">
           <Pchip slug={P.slug} name={P.name} big />
           <span className="pname">{P.name}</span>
-          <span className="pmeta">{total} account{total === 1 ? '' : 's'}{P.category ? ` · ${P.category}` : ''}</span>
+          <Link className="pmeta" href={`/projects?provider=${P.slug}`} style={{ textDecoration: 'none' }}>{total} account{total === 1 ? '' : 's'}{P.category ? ` · ${P.category}` : ''} · see resources →</Link>
           {P.console_url && <a className="consolelink" href={P.console_url} target="_blank" rel="noopener noreferrer">console <Ext /></a>}
         </div>
         <div className="acc-grid">{accs.map(acard)}</div>
@@ -91,12 +109,23 @@ export default function AccountsView({ initial }) {
     );
   }).filter(Boolean);
 
+  const chips = [];
+  if (params.missing === 'bitwarden') chips.push('Missing Bitwarden link');
+  if (params.focus) chips.push(`Focused: ${accounts.find((a) => a.slug === params.focus)?.label || params.focus}`);
+  if (params.provider) chips.push(`Provider: ${providers.find((p) => p.slug === params.provider)?.name || params.provider}`);
+
   return (
     <>
       <h1 className="pagetitle">Accounts</h1>
       <p className="pagesub">Every login across every provider — console in one click, Bitwarden item beside it. Secrets never live here.</p>
+      {chips.length > 0 && (
+        <div className="filterchips">
+          {chips.map((c) => <span key={c} className="fchip" style={{ paddingRight: 11 }}>{c}</span>)}
+          <Link className="fchip" href="/accounts">Clear filters <span>×</span></Link>
+        </div>
+      )}
       <div className="addbar">
-        <input className="filter" placeholder="Filter accounts, logins, providers…" value={filter} onChange={(e) => setFilter(e.target.value)} />
+        <input id="accounts-filter" className="filter" placeholder="Filter accounts, logins, providers…" value={filter} onChange={(e) => setFilter(e.target.value)} />
         <button className="btn primary" onClick={() => setEditing('new')}>+ Add account</button>
         <button className="btn" onClick={() => setEditing('new-provider')}>+ Add provider</button>
       </div>
@@ -111,7 +140,7 @@ export default function AccountsView({ initial }) {
         </div>
       )}
       {sections}
-      {q && !sections.length && <div className="empty">Nothing matches “{filter}”.</div>}
+      {!sections.length && <div className="empty">Nothing matches. <Link href="/accounts" style={{ color: 'var(--accent)' }}>Clear filters</Link></div>}
     </>
   );
 }

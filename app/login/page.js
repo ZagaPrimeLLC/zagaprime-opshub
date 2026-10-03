@@ -21,12 +21,16 @@ export default function Login() {
   }
 
   return (
-    <form className="loginbox" onSubmit={submit}>
-      <h1>ZagaPrime Ops Hub</h1>
-      <p>Private dashboard. Enter the Ops Hub password to continue.</p>
-      <input type="password" autoFocus placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
-      {err && <p style={{ color: 'var(--flag)' }}>{err}</p>}
-      <button className="btn primary" disabled={busy || !pw} type="submit">{busy ? 'Signing in…' : 'Sign in'}</button>
-    </form>
+    <div className="loginwrap">
+      <form className="loginbox" onSubmit={submit}>
+        <img src="/brand/zagaprime-logo.jpg" alt="ZagaPrime Technologies" />
+        <p>Ops Hub · private command center. Enter your password to continue.</p>
+        <input id="opshub-password" type="password" autoFocus placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
+        {err && <p style={{ color: '#ff6b85' }}>{err}</p>}
+        <button className="btn primary" disabled={busy || !pw} type="submit" style={{ justifyContent: 'center', padding: '9px 12px' }}>
+          {busy ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+    </div>
   );
 }
