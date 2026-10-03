@@ -78,20 +78,22 @@ export default async function Overview() {
         ))}
       </div>
 
-      <h2 className="viewtitle">Domains</h2>
+      <h2 className="viewtitle">Domain health — lowest scores first</h2>
       <div className="domwrap">
         <table className="domtable">
-          <thead><tr><th>Domain</th><th>Registrar</th><th>DNS</th><th>Project</th><th>Note</th></tr></thead>
+          <thead><tr><th>Domain</th><th>Status</th><th>Security</th><th>Compliance</th><th>SEO</th><th>Perf</th><th>Risk posture</th></tr></thead>
           <tbody>
-            {d.domains.map((x) => (
-              <tr key={x.domain}>
-                <td className="mono">{x.domain}</td>
-                <td>{d.accounts.find((a) => a.slug === x.registrar_account)?.label || '—'}</td>
-                <td>{d.accounts.find((a) => a.slug === x.dns_account)?.label || '—'}</td>
-                <td>{d.projects.find((p) => p.slug === x.project_slug)?.name || '—'}</td>
-                <td className="muted">{x.notes || ''}</td>
-              </tr>
-            ))}
+            {[...d.domains]
+              .sort((a, b) => (minScore(a) ?? 101) - (minScore(b) ?? 101))
+              .map((x) => (
+                <tr key={x.domain}>
+                  <td className="mono"><Link href="/domains">{x.domain}</Link></td>
+                  <td><span className={`pill ${x.status || 'unknown'}`}>{x.status || '—'}</span></td>
+                  {['score_security', 'score_compliance', 'score_seo', 'score_performance', 'score_risk'].map((k) => (
+                    <td key={k} style={{ fontVariantNumeric: 'tabular-nums', color: x[k] == null ? 'var(--faint)' : x[k] >= 80 ? 'var(--ok)' : x[k] >= 60 ? 'var(--fg)' : x[k] >= 40 ? 'var(--warn)' : 'var(--flag)' }}>{x[k] ?? '—'}</td>
+                  ))}
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -102,6 +104,11 @@ export default async function Overview() {
       </p>
     </>
   );
+}
+
+function minScore(x) {
+  const vals = ['score_security', 'score_compliance', 'score_performance', 'score_risk'].map((k) => x[k]).filter((v) => v != null);
+  return vals.length ? Math.min(...vals) : null;
 }
 
 function Stat({ v, l }) {

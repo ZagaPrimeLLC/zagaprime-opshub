@@ -6,8 +6,18 @@ const LINKS = [
   { href: '/', label: 'Overview' },
   { href: '/projects', label: 'Projects' },
   { href: '/accounts', label: 'Accounts' },
+  { href: '/domains', label: 'Domains' },
   { href: '/news', label: 'News' },
 ];
+
+function Logo() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+      <rect x="0" y="0" width="28" height="28" rx="7" fill="#2563eb" />
+      <path d="M8 9h12l-8.5 7H20v3H8l8.5-7H8z" fill="#fff" />
+    </svg>
+  );
+}
 
 export default function Nav() {
   const pathname = usePathname();
@@ -16,7 +26,7 @@ export default function Nav() {
 
   function toggleTheme() {
     const r = document.documentElement;
-    const next = r.dataset.theme === 'light' ? 'dark' : 'light';
+    const next = r.dataset.theme === 'dark' ? 'light' : 'dark';
     r.dataset.theme = next;
     try { localStorage.setItem('opshub-theme', next); } catch {}
   }
@@ -31,7 +41,9 @@ export default function Nav() {
       <div className="topbar-inner">
         <div className="toprow">
           <Link className="brand" href="/">
-            <span className="dot">Z</span>Ops Hub <small>ZagaPrime</small>
+            <Logo />
+            <span className="logotype">Zaga<b>Prime</b></span>
+            <small>Ops Hub</small>
           </Link>
           <div className="topactions">
             <button className="iconbtn" onClick={toggleTheme} aria-label="Toggle theme">
