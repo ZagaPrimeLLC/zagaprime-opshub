@@ -99,7 +99,7 @@ export default async function Overview() {
         ))}
       </div>
 
-      <h2 className="viewtitle" id="keepalive" style={{ scrollMarginTop: 190 }}>Database keep-alive — Supabase projects</h2>
+      <h2 className="viewtitle" id="keepalive" style={{ scrollMarginTop: 190 }}>Database keep-alive — Supabase projects <Link href="/databases">Open database pulse →</Link></h2>
       <KeepalivePanel
         initial={d.resources.filter((r) => r.keepalive_enabled).map(({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }) => ({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }))}
         accounts={d.accounts.map(({ slug, label, login_hint }) => ({ slug, label, login_hint }))}

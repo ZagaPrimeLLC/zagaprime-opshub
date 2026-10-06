@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/', label: 'Overview' },
   { href: '/projects', label: 'Projects' },
   { href: '/accounts', label: 'Accounts' },
+  { href: '/databases', label: 'Databases' },
   { href: '/domains', label: 'Domains' },
   { href: '/news', label: 'Stack updates' },
   { href: '/channel', label: 'Channel' },
