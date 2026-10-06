@@ -20,7 +20,7 @@ export async function api(entity, method, body, id) {
 export function EntityForm({ entity, row, fields, pk, isNew, onSaved, onCancel, onDeleted }) {
   const [vals, setVals] = useState(() => {
     const v = {};
-    for (const f of fields) v[f.name] = row?.[f.name] ?? '';
+    for (const f of fields) { const x = row?.[f.name]; v[f.name] = typeof x === 'boolean' ? String(x) : (x ?? ''); }
     return v;
   });
   const [err, setErr] = useState('');

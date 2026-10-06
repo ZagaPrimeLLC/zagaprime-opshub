@@ -3,6 +3,7 @@ import { fetchAll, overview } from '@/lib/data';
 import { pcolor } from '@/lib/providers';
 import { BarList, Donut } from '@/components/bits';
 import SetupNotice from '@/components/setup';
+import KeepalivePanel from '@/components/keepalive-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,6 +98,13 @@ export default async function Overview() {
           </Link>
         ))}
       </div>
+
+      <h2 className="viewtitle" id="keepalive" style={{ scrollMarginTop: 190 }}>Database keep-alive — Supabase projects</h2>
+      <KeepalivePanel
+        initial={d.resources.filter((r) => r.keepalive_enabled).map(({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }) => ({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }))}
+        accounts={d.accounts.map(({ slug, label, login_hint }) => ({ slug, label, login_hint }))}
+        projects={d.projects.map(({ slug, name }) => ({ slug, name }))}
+      />
 
       <h2 className="viewtitle">Project progress — hosting · database · domain · repo <Link href="/projects">All projects →</Link></h2>
       <div className="progrows">

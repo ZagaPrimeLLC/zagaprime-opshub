@@ -51,6 +51,8 @@ export default function ProjectsView({ initial, params }) {
     { name: 'project_slug', label: 'Project', type: 'select', options: projectOptions },
     { name: 'external_ref', label: 'Ref / ID' },
     { name: 'url', label: 'Console URL', wide: true },
+    { name: 'keepalive_enabled', label: 'Keep-alive (Supabase)', type: 'select', options: [{ v: 'true', l: 'On — ping daily' }, { v: 'false', l: 'Off' }] },
+    { name: 'keepalive_key', label: 'Publishable key (keep-alive)', placeholder: 'sb_publishable_…' },
     { name: 'notes', label: 'Notes', type: 'textarea' },
   ];
   const projFields = [
@@ -151,7 +153,7 @@ export default function ProjectsView({ initial, params }) {
             )}
             {editingRes === newKey ? (
               <EntityForm entity="resources"
-                row={{ project_slug: p.slug ?? '', environment: 'prod', kind: focusedHere && params.add ? ADD_KIND[params.add] || '' : '' }}
+                row={{ project_slug: p.slug ?? '', environment: 'prod', keepalive_enabled: false, kind: focusedHere && params.add ? ADD_KIND[params.add] || '' : '' }}
                 fields={resFields} pk="id" isNew onSaved={savedRes} onCancel={() => setEditingRes(null)} />
             ) : (
               <div className="rrow">

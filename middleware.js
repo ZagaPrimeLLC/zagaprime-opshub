@@ -12,6 +12,16 @@ export async function middleware(req) {
   const { pathname } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) return NextResponse.next();
 
+  // Vercel's daily cron for the database keep-alive. With CRON_SECRET set, Vercel sends it as a
+  // bearer token; without it, accept Vercel's cron user agent (the job only pings public endpoints).
+  if (pathname === '/api/keepalive' && req.method === 'GET') {
+    const cronSecret = process.env.CRON_SECRET;
+    const auth = req.headers.get('authorization');
+    if (cronSecret ? auth === `Bearer ${cronSecret}` : /vercel-cron/i.test(req.headers.get('user-agent') || '')) {
+      return NextResponse.next();
+    }
+  }
+
   const secret = process.env.SESSION_SECRET;
   const cookie = req.cookies.get('opshub_session')?.value;
   if (secret && cookie && cookie === (await expectedToken(secret))) return NextResponse.next();
