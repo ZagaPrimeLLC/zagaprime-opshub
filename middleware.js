@@ -12,6 +12,13 @@ export async function middleware(req) {
   const { pathname } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) return NextResponse.next();
 
+  // The daily stack-news agent posts here with its own token; it can only add news items.
+  if (pathname === '/api/ingest/news') {
+    const token = process.env.NEWS_INGEST_TOKEN;
+    if (token && req.headers.get('authorization') === `Bearer ${token}`) return NextResponse.next();
+    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+  }
+
   // Vercel's daily cron for the database keep-alive. With CRON_SECRET set, Vercel sends it as a
   // bearer token; without it, accept Vercel's cron user agent (the job only pings public endpoints).
   if (pathname === '/api/keepalive' && req.method === 'GET') {
