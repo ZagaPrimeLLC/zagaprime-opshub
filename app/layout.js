@@ -8,7 +8,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export const viewport = { themeColor: '#040716' };
+export const viewport = { themeColor: '#f6f7f9' };
 
 const themeInit = `try{var t=localStorage.getItem('opshub-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}`;
 
@@ -17,8 +17,10 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
-        <Nav />
-        <main className="wrap">{children}</main>
+        <div className="shell">
+          <Nav />
+          <main className="main"><div className="wrap">{children}</div></main>
+        </div>
         <Chat />
       </body>
     </html>

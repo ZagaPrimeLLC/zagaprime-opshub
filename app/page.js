@@ -1,14 +1,13 @@
 import Link from 'next/link';
 import { fetchAll, overview } from '@/lib/data';
-import { pcolor } from '@/lib/providers';
 import { BarList, Donut } from '@/components/bits';
 import SetupNotice from '@/components/setup';
 import KeepalivePanel from '@/components/keepalive-panel';
 
 export const dynamic = 'force-dynamic';
 
-const ENV_COLORS = { prod: '#2fd38a', staging: '#facc15', preview: '#14d4ff', dev: '#5f63ff', unknown: '#6c769d' };
-const CRIT_COLORS = { critical: '#ff4d6d', high: '#facc15', medium: '#5f63ff', low: '#6c769d' };
+const ENV_COLORS = { prod: 'var(--ok)', staging: 'var(--warn)', preview: 'var(--info)', dev: 'var(--accent)', unknown: 'var(--faint)' };
+const CRIT_COLORS = { critical: 'var(--flag)', high: 'var(--warn)', medium: 'var(--info)', low: 'var(--faint)' };
 const SCORE_KEYS = [
   ['score_security', 'Security'], ['score_compliance', 'Compliance'], ['score_seo', 'SEO'],
   ['score_performance', 'Perf'], ['score_risk', 'Risk posture'],
@@ -16,9 +15,8 @@ const SCORE_KEYS = [
 
 function scoreColor(v) {
   if (v == null) return 'var(--faint)';
-  if (v >= 80) return 'var(--ok)';
-  if (v >= 60) return 'var(--fg)';
-  if (v >= 40) return 'var(--warn)';
+  if (v >= 70) return 'var(--fg)';
+  if (v >= 50) return 'var(--warn)';
   return 'var(--flag)';
 }
 function minScore(x) {
@@ -39,7 +37,7 @@ export default async function Overview() {
     .map(([slug, n]) => ({
       label: d.providers.find((p) => p.slug === slug)?.name || slug,
       value: n,
-      color: pcolor(slug).c,
+      color: 'var(--accent)',
       href: slug === 'other' ? '/projects' : `/projects?provider=${slug}`,
     }));
   const envParts = Object.entries(o.byEnv).sort((a, b) => b[1] - a[1])
@@ -61,17 +59,27 @@ export default async function Overview() {
     { v: o.openNews.length, l: 'Open updates', href: '/news' },
   ];
 
+  const critCount = o.openNews.filter((n) => n.criticality === 'critical').length;
+
   return (
     <>
-      <section className="hero">
-        <h1>Welcome back, Kzee.</h1>
-        <p>
-          {o.openNews.filter((n) => n.criticality === 'critical').length > 0
-            ? `${o.openNews.filter((n) => n.criticality === 'critical').length} critical stack update needs you today. `
-            : 'No critical stack updates open. '}
-          {complete}/{o.progress.length} projects have a complete stack. {lastSweep ? `Last news sweep ${lastSweep} ET.` : ''}
-        </p>
-      </section>
+      <header className="pagehead">
+        <div>
+          <h1 className="pagetitle">Overview</h1>
+          <p className="pagesub">
+            {complete}/{o.progress.length} projects have a complete stack.
+            {lastSweep ? ` Last news sweep ${lastSweep} ET.` : ''}
+          </p>
+        </div>
+      </header>
+
+      {critCount > 0 && (
+        <Link className="banner crit" href="/news?crit=critical">
+          <b>{critCount} critical stack update{critCount === 1 ? '' : 's'}</b>
+          <span className="muted">Security or breaking changes that need action — review now.</span>
+          <span className="bgo">→</span>
+        </Link>
+      )}
 
       <div className="stats">
         {stats.map((s) => (
@@ -99,7 +107,7 @@ export default async function Overview() {
         ))}
       </div>
 
-      <h2 className="viewtitle" id="keepalive" style={{ scrollMarginTop: 190 }}>Database keep-alive — Supabase projects <Link href="/databases">Open database pulse →</Link></h2>
+      <h2 className="viewtitle" id="keepalive" style={{ scrollMarginTop: 72 }}>Database keep-alive — Supabase projects <Link href="/databases">Open database pulse →</Link></h2>
       <KeepalivePanel
         initial={d.resources.filter((r) => r.keepalive_enabled).map(({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }) => ({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }))}
         accounts={d.accounts.map(({ slug, label, login_hint }) => ({ slug, label, login_hint }))}
@@ -110,7 +118,7 @@ export default async function Overview() {
       <div className="progrows">
         {o.progress.map((p) => {
           const pct = (p.score / 4) * 100;
-          const fill = p.score === 4 ? 'var(--grad)' : p.score >= 2 ? 'linear-gradient(90deg,#5f63ff,#a52cff)' : 'var(--flag)';
+          const fill = p.score === 4 ? 'var(--ok)' : p.score >= 2 ? 'var(--accent)' : 'var(--flag)';
           return (
             <div className="prog" key={p.slug}>
               <div>
