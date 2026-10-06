@@ -77,14 +77,8 @@ function FleetRing({ awake, total }) {
   const pct = total ? awake / total : 0;
   return (
     <svg className="dp-ring" viewBox="0 0 132 132" role="img" aria-label={`${awake} of ${total} databases awake`}>
-      <defs>
-        <linearGradient id="dp-ring-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#14d4ff" /><stop offset=".45" stopColor="#5f63ff" />
-          <stop offset=".72" stopColor="#a52cff" /><stop offset="1" stopColor="#ff00c8" />
-        </linearGradient>
-      </defs>
       <circle cx="66" cy="66" r={r} fill="none" stroke="var(--line)" strokeWidth="10" />
-      <circle cx="66" cy="66" r={r} fill="none" stroke="url(#dp-ring-grad)" strokeWidth="10" strokeLinecap="round"
+      <circle cx="66" cy="66" r={r} fill="none" stroke="var(--ok)" strokeWidth="10" strokeLinecap="round"
         strokeDasharray={`${c * pct} ${c}`} transform="rotate(-90 66 66)" className="dp-ring-arc" />
       <text x="66" y="62" textAnchor="middle" className="dp-ring-v">{awake}<tspan className="dp-ring-of">/{total}</tspan></text>
       <text x="66" y="84" textAnchor="middle" className="dp-ring-l">AWAKE</text>
@@ -117,11 +111,11 @@ function Sparkline({ points }) {
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
         <defs>
           <linearGradient id="dp-spark-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--cyan)" stopOpacity=".28" /><stop offset="1" stopColor="var(--cyan)" stopOpacity="0" />
+            <stop offset="0" stopColor="var(--accent)" stopOpacity=".22" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={area} fill="url(#dp-spark-fill)" />
-        <path d={line} fill="none" stroke="var(--cyan)" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+        <path d={line} fill="none" stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
         {h && <line x1={h[0]} x2={h[0]} y1="0" y2={H} stroke="var(--line2)" strokeWidth="1" vectorEffect="non-scaling-stroke" />}
       </svg>
       {h && (

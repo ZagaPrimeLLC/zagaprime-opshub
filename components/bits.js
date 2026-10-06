@@ -35,7 +35,7 @@ export function BarList({ items }) {
         const inner = (
           <>
             <span className="bl">{i.label}</span>
-            <span className="bt"><span className="bf" style={{ width: `${Math.round((i.value / max) * 100)}%`, background: i.color || 'var(--grad)' }} /></span>
+            <span className="bt"><span className="bf" style={{ width: `${Math.round((i.value / max) * 100)}%`, background: i.color || 'var(--accent)' }} /></span>
             <span className="bv">{i.value}</span>
           </>
         );

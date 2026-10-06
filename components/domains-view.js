@@ -14,9 +14,8 @@ const SCORE_KEYS = [
 
 function scoreColor(v) {
   if (v == null) return 'var(--line2)';
-  if (v >= 80) return 'linear-gradient(90deg,#14d4ff,#2fd38a)';
-  if (v >= 60) return 'linear-gradient(90deg,#5f63ff,#a52cff)';
-  if (v >= 40) return 'var(--warn)';
+  if (v >= 70) return 'var(--ok)';
+  if (v >= 50) return 'var(--warn)';
   return 'var(--flag)';
 }
 

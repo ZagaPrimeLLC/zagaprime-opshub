@@ -32,7 +32,7 @@ function Card({ it }) {
 function AlertCard({ a }) {
   return (
     <Link className="tcard" href={`/news?crit=${a.criticality}`} title={a.title}>
-      <span className="tthumb" style={{ display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 11, color: '#fff' }}>
+      <span className="tthumb" style={{ display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 11, color: '#fff', background: a.criticality === 'critical' ? 'var(--flag)' : 'var(--warn)' }}>
         {a.criticality === 'critical' ? 'CRIT' : 'HIGH'}
       </span>
       <span className="tmeta">
