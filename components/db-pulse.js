@@ -154,7 +154,7 @@ function DailyCalls({ days, totals }) {
   const [hover, setHover] = useState(null);
   const max = Math.max(1, ...days.map((k) => (totals[k]?.ok || 0) + (totals[k]?.fail || 0)));
   const top = max <= 4 ? max : Math.ceil(max / 4) * 4;
-  const grid = [top, top / 2, 0];
+  const grid = top >= 4 ? [top, top / 2, 0] : [top, 0];
   return (
     <div className="dp-calls">
       <div className="dp-calls-plot">
