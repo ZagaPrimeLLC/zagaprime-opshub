@@ -1,6 +1,7 @@
 import './globals.css';
 import Nav from '@/components/nav';
 import Chat from '@/components/chat';
+import Ticker from '@/components/ticker';
 
 export const metadata = {
   title: { default: 'ZagaPrime Ops Hub', template: '%s · ZagaPrime Ops Hub' },
@@ -19,7 +20,7 @@ export default function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <div className="shell">
           <Nav />
-          <main className="main"><div className="wrap">{children}</div></main>
+          <main className="main"><Ticker /><div className="wrap">{children}</div></main>
         </div>
         <Chat />
       </body>
