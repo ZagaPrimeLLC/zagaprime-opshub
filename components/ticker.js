@@ -33,7 +33,7 @@ function Card({ it }) {
 function AlertCard({ a }) {
   return (
     <Link className="tcard" href={`/news?crit=${a.criticality}`} title={a.title}>
-      <span className="tthumb" style={{ display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 11, color: '#fff', background: a.criticality === 'critical' ? 'var(--flag)' : 'var(--warn)' }}>
+      <span className="tthumb" style={{ display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 13, letterSpacing: '.06em', color: a.criticality === 'critical' ? '#fff' : '#1a1400', background: a.criticality === 'critical' ? 'var(--flag)' : 'var(--warn)' }}>
         {a.criticality === 'critical' ? 'CRIT' : 'HIGH'}
       </span>
       <span className="tmeta">
@@ -69,11 +69,11 @@ export default function Ticker() {
     ...alerts.map((a) => <AlertCard key={'a' + a.id} a={a} />),
     ...items.map((it) => <Card key={it.id} it={it} />),
   ];
-  const dur = `${Math.max(60, cards.length * 6)}s`;
+  const dur = `${Math.max(90, cards.length * 8)}s`;
 
   return (
     <div className="ticker" aria-label="Live tech and AI news">
-      <Link className="ticker-label" href="/channel"><span className="dot" />Live</Link>
+      <Link className="ticker-label" href="/channel"><span className="tl-main"><span className="dot" />Live</span><span className="tl-sub">Tech · AI · Dev</span></Link>
       <div className="ticker-viewport">
         {cards.length ? (
           <div className="ticker-track" style={{ '--dur': dur }}>
@@ -88,7 +88,7 @@ export default function Ticker() {
           </div>
         )}
       </div>
-      <Link className="ticker-more" href="/channel">Channel →</Link>
+      <Link className="ticker-more" href="/channel">All news →</Link>
     </div>
   );
 }
