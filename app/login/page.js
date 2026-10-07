@@ -26,7 +26,7 @@ export default function Login() {
         <img src="/brand/zagaprime-logo.jpg" alt="ZagaPrime Technologies" />
         <p>Ops Hub · private command center. Enter your password to continue.</p>
         <input id="opshub-password" type="password" autoFocus placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
-        {err && <p style={{ color: '#ff6b85' }}>{err}</p>}
+        {err && <p style={{ color: 'var(--flag)' }}>{err}</p>}
         <button className="btn primary" disabled={busy || !pw} type="submit" style={{ justifyContent: 'center', padding: '9px 12px' }}>
           {busy ? 'Signing in…' : 'Sign in'}
         </button>

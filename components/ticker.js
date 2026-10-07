@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 function hrefFor(it) {
@@ -32,7 +33,7 @@ function Card({ it }) {
 function AlertCard({ a }) {
   return (
     <Link className="tcard" href={`/news?crit=${a.criticality}`} title={a.title}>
-      <span className="tthumb" style={{ display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 11, color: '#fff' }}>
+      <span className="tthumb" style={{ display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 11, color: '#fff', background: a.criticality === 'critical' ? 'var(--flag)' : 'var(--warn)' }}>
         {a.criticality === 'critical' ? 'CRIT' : 'HIGH'}
       </span>
       <span className="tmeta">
@@ -44,6 +45,7 @@ function AlertCard({ a }) {
 }
 
 export default function Ticker() {
+  const pathname = usePathname();
   const [data, setData] = useState(null);
   const [failed, setFailed] = useState(false);
 
@@ -58,6 +60,8 @@ export default function Ticker() {
     const t = setInterval(load, 15 * 60 * 1000);
     return () => { alive = false; clearInterval(t); };
   }, []);
+
+  if (pathname === '/login') return null;
 
   const items = data?.items || [];
   const alerts = data?.alerts || [];

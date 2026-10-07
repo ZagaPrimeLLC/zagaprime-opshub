@@ -7,8 +7,8 @@ import KeepalivePanel from '@/components/keepalive-panel';
 
 export const dynamic = 'force-dynamic';
 
-const ENV_COLORS = { prod: '#2fd38a', staging: '#facc15', preview: '#14d4ff', dev: '#5f63ff', unknown: '#6c769d' };
-const CRIT_COLORS = { critical: '#ff4d6d', high: '#facc15', medium: '#5f63ff', low: '#6c769d' };
+const ENV_COLORS = { prod: 'var(--ok)', staging: 'var(--warn)', preview: 'var(--info)', dev: 'var(--blue)', unknown: 'var(--faint)' };
+const CRIT_COLORS = { critical: 'var(--flag)', high: 'var(--warn)', medium: 'var(--info)', low: 'var(--faint)' };
 const SCORE_KEYS = [
   ['score_security', 'Security'], ['score_compliance', 'Compliance'], ['score_seo', 'SEO'],
   ['score_performance', 'Perf'], ['score_risk', 'Risk posture'],
@@ -16,9 +16,8 @@ const SCORE_KEYS = [
 
 function scoreColor(v) {
   if (v == null) return 'var(--faint)';
-  if (v >= 80) return 'var(--ok)';
-  if (v >= 60) return 'var(--fg)';
-  if (v >= 40) return 'var(--warn)';
+  if (v >= 70) return 'var(--ok)';
+  if (v >= 50) return 'var(--warn)';
   return 'var(--flag)';
 }
 function minScore(x) {
@@ -50,6 +49,7 @@ export default async function Overview() {
     ? new Date(d.news[0].created_at).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
     : null;
   const complete = o.progress.filter((p) => p.score === 4).length;
+  const critCount = o.openNews.filter((n) => n.criticality === 'critical').length;
 
   const stats = [
     { v: d.projects.length, l: 'Projects', href: '/projects' },
@@ -66,12 +66,19 @@ export default async function Overview() {
       <section className="hero">
         <h1>Welcome back, Kzee.</h1>
         <p>
-          {o.openNews.filter((n) => n.criticality === 'critical').length > 0
-            ? `${o.openNews.filter((n) => n.criticality === 'critical').length} critical stack update needs you today. `
-            : 'No critical stack updates open. '}
+          {critCount > 0 ? '' : 'No critical stack updates open. '}
           {complete}/{o.progress.length} projects have a complete stack. {lastSweep ? `Last news sweep ${lastSweep} ET.` : ''}
         </p>
       </section>
+
+      {critCount > 0 && (
+        <Link className="banner crit" href="/news?crit=critical">
+          <span className="bdot" aria-hidden="true" />
+          <b>{critCount} critical stack update{critCount === 1 ? '' : 's'}</b>
+          <span className="muted">Security or breaking changes that need action. Review now.</span>
+          <span className="bgo">→</span>
+        </Link>
+      )}
 
       <div className="stats">
         {stats.map((s) => (
@@ -99,7 +106,7 @@ export default async function Overview() {
         ))}
       </div>
 
-      <h2 className="viewtitle" id="keepalive" style={{ scrollMarginTop: 190 }}>Database keep-alive — Supabase projects <Link href="/databases">Open database pulse →</Link></h2>
+      <h2 className="viewtitle" id="keepalive" style={{ scrollMarginTop: 84 }}>Database keep-alive — Supabase projects <Link href="/databases">Open database pulse →</Link></h2>
       <KeepalivePanel
         initial={d.resources.filter((r) => r.keepalive_enabled).map(({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }) => ({ id, name, external_ref, account_slug, project_slug, last_ping_at, last_ping_ok, last_ping_note, last_ping_ms }))}
         accounts={d.accounts.map(({ slug, label, login_hint }) => ({ slug, label, login_hint }))}
