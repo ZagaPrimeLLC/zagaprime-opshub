@@ -9,16 +9,33 @@ function hrefFor(it) {
   return { href: it.url, internal: false };
 }
 
+function hostOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return null; }
+}
+
+// Real artwork first (feed image or the page's preview image), then the site's own icon.
+function Thumb({ image, url, video, badge }) {
+  const [broken, setBroken] = useState(false);
+  const host = hostOf(url);
+  const showImg = image && !broken;
+  return (
+    <span className="tthumb">
+      {showImg
+        ? <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
+        : host && <span className="tfav"><img src={`https://www.google.com/s2/favicons?domain=${host}&sz=128`} alt="" loading="lazy" referrerPolicy="no-referrer" /></span>}
+      {video && (
+        <span className="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg></span>
+      )}
+      {badge && <span className={`tbadge ${badge}`}>{badge === 'critical' ? 'Critical' : 'High'}</span>}
+    </span>
+  );
+}
+
 function Card({ it }) {
   const { href, internal } = hrefFor(it);
   const inner = (
     <>
-      <span className="tthumb">
-        {it.image && <img src={it.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-        {it.video && (
-          <span className="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg></span>
-        )}
-      </span>
+      <Thumb image={it.image} url={it.url} video={it.video} />
       <span className="tmeta">
         <span className="tsrc">{it.source}{it.kind === 'podcast' ? ' · podcast' : it.video ? ' · video' : ''}</span>
         <span className="ttitle">{it.title}</span>
@@ -32,12 +49,10 @@ function Card({ it }) {
 
 function AlertCard({ a }) {
   return (
-    <Link className="tcard" href={`/news?crit=${a.criticality}`} title={a.title}>
-      <span className="tthumb" style={{ display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 13, letterSpacing: '.06em', color: a.criticality === 'critical' ? '#fff' : '#1a1400', background: a.criticality === 'critical' ? 'var(--flag)' : 'var(--warn)' }}>
-        {a.criticality === 'critical' ? 'CRIT' : 'HIGH'}
-      </span>
+    <Link className="tcard alert" href={`/news?crit=${a.criticality}`} title={a.title}>
+      <Thumb image={a.image} url={a.url} badge={a.criticality} />
       <span className="tmeta">
-        <span className="tsrc alert">Stack alert · {a.effort || 'action needed'}</span>
+        <span className="tsrc alert">{a.provider ? `${a.provider} · ` : 'Stack alert · '}{a.effort || 'action needed'}</span>
         <span className="ttitle">{a.title}</span>
       </span>
     </Link>
