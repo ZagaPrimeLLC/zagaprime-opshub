@@ -208,7 +208,7 @@ a.clicky:hover,.clicky:hover{transform:translateY(-2px);box-shadow:var(--hover-g
 .hero::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--grad)}
 .hero h1{font-family:var(--display);font-size:24px;margin:0 0 4px;position:relative}
 .hero p{margin:0;color:#c3c9ee;font-size:13.5px;position:relative;max-width:70ch}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:22px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:12px;margin-bottom:22px}
 .stat{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px 13px;box-shadow:var(--shadow);display:block}
 .stat::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--grad)}
 .stat .v{font-family:var(--display);font-weight:700;font-size:28px;font-variant-numeric:tabular-nums;line-height:1.1}
