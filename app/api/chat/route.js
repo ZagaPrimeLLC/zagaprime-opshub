@@ -92,11 +92,15 @@ async function runTool(name, input) {
 
 // Streams one Anthropic request, piping text deltas to the controller and
 // collecting any tool_use blocks. Returns { stopReason, text, toolUses }.
-async function streamOnce(key, system, messages, controller, encoder) {
+async function streamOnce(key, system, messages, controller, encoder, final = false) {
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, max_tokens: 1500, stream: true, system, messages, tools: TOOLS }),
+    body: JSON.stringify({
+      model: MODEL, max_tokens: 1500, stream: true, system, messages, tools: TOOLS,
+      // The last round must answer in text: tools stay defined (earlier rounds used them) but can't be called.
+      ...(final ? { tool_choice: { type: 'none' } } : {}),
+    }),
   });
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => '');
@@ -178,7 +182,7 @@ export async function POST(req) {
         const conv = [...messages];
         // At most two tool rounds, then a final text-only pass.
         for (let round = 0; ; round++) {
-          const { stopReason, text, toolUses } = await streamOnce(key, system, conv, controller, encoder);
+          const { stopReason, text, toolUses } = await streamOnce(key, system, conv, controller, encoder, round >= 2);
           if (stopReason !== 'tool_use' || !toolUses.length || round >= 2) break;
           const assistantContent = [];
           if (text) assistantContent.push({ type: 'text', text });
