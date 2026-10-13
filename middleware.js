@@ -12,11 +12,17 @@ export async function middleware(req) {
   const { pathname } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + '/'))) return NextResponse.next();
 
-  // The daily stack-news agent posts here with its own token; it can only add news items.
-  if (pathname === '/api/ingest/news') {
+  // Agent doors. The stack-news / Ezra agent authenticates with NEWS_INGEST_TOKEN and can only
+  // touch these three endpoints: add news items, post the daily brief, and work the Ezra queue.
+  const AGENT_PATHS = ['/api/ingest/news', '/api/ingest/brief', '/api/ezra/queue'];
+  if (AGENT_PATHS.includes(pathname)) {
     const token = process.env.NEWS_INGEST_TOKEN;
     if (token && req.headers.get('authorization') === `Bearer ${token}`) return NextResponse.next();
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+    // /api/ingest/news is agent-only; the brief + queue endpoints also serve the signed-in UI,
+    // so those fall through to the session-cookie check below.
+    if (pathname === '/api/ingest/news') {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+    }
   }
 
   // Vercel's daily cron for the database keep-alive. With CRON_SECRET set, Vercel sends it as a
