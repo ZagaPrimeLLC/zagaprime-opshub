@@ -9,8 +9,8 @@ const CRIT = new Set(['critical', 'high', 'medium', 'low']);
 // GET: recent URLs + valid slugs, so the agent can skip duplicates and tag projects.
 export async function GET() {
   const [news, projects, providers] = await Promise.all([
-    q(`select url, title from proj_opsdash.stack_news order by created_at desc limit 150`),
-    q(`select slug, name from proj_opsdash.projects order by slug`),
+    q(`select id, url, title, criticality, action, affected_projects, status from proj_opsdash.stack_news order by created_at desc limit 150`),
+    q(`select slug, name, repo_url, prod_url, status from proj_opsdash.projects order by slug`),
     q(`select slug, name from proj_opsdash.providers order by slug`),
   ]);
   return NextResponse.json({ recent: news.rows, projects: projects.rows, providers: providers.rows });

@@ -7,8 +7,19 @@ import { api } from '@/components/crud';
 const CRITS = ['critical', 'high', 'medium', 'low'];
 const OPEN = ['new', 'reviewed', 'in-progress'];
 
+const EZRA_LABEL = {
+  queued: 'Ezra: queued',
+  'picked-up': 'Ezra: picked up',
+  'in-progress': 'Ezra: working',
+  'pr-open': 'Ezra: PR ready for review',
+  done: 'Ezra: done',
+  failed: 'Ezra: failed',
+};
+const EZRA_OPEN = ['queued', 'picked-up', 'in-progress', 'pr-open'];
+
 export default function NewsView({ initial, params }) {
   const [news, setNews] = useState(initial.news);
+  const [ezra, setEzra] = useState(initial.ezra || []);
   const [crit, setCrit] = useState(['all', ...CRITS].includes(params.crit) ? params.crit : 'all');
   const [bucket, setBucket] = useState(['open', 'done', 'dismissed', 'all'].includes(params.bucket) ? params.bucket : 'open');
   const [busyId, setBusyId] = useState(null);
@@ -26,6 +37,40 @@ export default function NewsView({ initial, params }) {
     if (b !== 'open') sp.set('bucket', b);
     if (params.project) sp.set('project', params.project);
     window.history.replaceState(null, '', `/news${sp.toString() ? '?' + sp : ''}`);
+  }
+
+  const ezraBy = useMemo(() => {
+    const by = {};
+    for (const j of ezra) if (j.news_id != null && !by[j.news_id]) by[j.news_id] = j; // newest first
+    return by;
+  }, [ezra]);
+
+  async function callEzra(item) {
+    setBusyId(item.id); setErr('');
+    try {
+      const res = await fetch('/api/ezra/queue', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ news_id: item.id, title: item.title }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not queue the fix');
+      setEzra((js) => [data.job, ...js.filter((j) => j.id !== data.job.id)]);
+    } catch (e) { setErr(e.message); }
+    setBusyId(null);
+  }
+
+  async function cancelEzra(job) {
+    setBusyId(job.news_id); setErr('');
+    try {
+      const res = await fetch('/api/ezra/queue', {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: job.id, status: 'cancelled' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not cancel');
+      setEzra((js) => js.map((j) => (j.id === data.job.id ? data.job : j)));
+    } catch (e) { setErr(e.message); }
+    setBusyId(null);
   }
 
   async function setStatus(item, status) {
@@ -74,7 +119,10 @@ export default function NewsView({ initial, params }) {
 
       <div className="newslist">
         {shown.length === 0 && <div className="empty">Nothing here. {bucket === 'open' ? 'All caught up.' : ''}</div>}
-        {shown.map((n) => (
+        {shown.map((n) => {
+          const job = ezraBy[n.id];
+          const jobOpen = job && EZRA_OPEN.includes(job.status);
+          return (
           <div className="newsitem" key={n.id}>
             <div className="newstop">
               <Pill kind={n.criticality} />
@@ -93,15 +141,37 @@ export default function NewsView({ initial, params }) {
                 </span>
               )}
               <span className="mono">status: {n.status}</span>
+              {job && (job.status === 'failed' || jobOpen) && (
+                <span className={`ezrabadge${job.status === 'pr-open' ? ' pr' : job.status === 'failed' ? ' failed' : ''}`}>
+                  <span className="edot" />{EZRA_LABEL[job.status] || `Ezra: ${job.status}`}
+                </span>
+              )}
             </div>
+            {job && Array.isArray(job.pr_links) && job.pr_links.length > 0 && (
+              <div className="ezralinks">
+                {job.pr_links.map((l, i) => {
+                  const href = typeof l === 'string' ? l : l?.url;
+                  const label = typeof l === 'string' ? l.replace(/^https?:\/\/(www\.)?/, '') : (l?.label || l?.url);
+                  return href ? <a key={i} href={href} target="_blank" rel="noopener noreferrer">{label} <Ext /></a> : null;
+                })}
+              </div>
+            )}
             <div className="newsbtns">
+              {!jobOpen && !['done', 'dismissed'].includes(n.status) && (
+                <button className="btn sm primary" disabled={busyId === n.id} onClick={() => callEzra(n)}
+                  title="Queue this for Ezra: it maps the affected repos, applies the fix on a branch, and opens PRs for your review">
+                  ✦ Fix with Ezra
+                </button>
+              )}
+              {job && job.status === 'queued' && <button className="btn sm" disabled={busyId === n.id} onClick={() => cancelEzra(job)}>Cancel Ezra</button>}
               {n.status !== 'reviewed' && OPEN.includes(n.status) && <button className="btn sm" disabled={busyId === n.id} onClick={() => setStatus(n, 'reviewed')}>Mark reviewed</button>}
               {n.status !== 'in-progress' && <button className="btn sm" disabled={busyId === n.id} onClick={() => setStatus(n, 'in-progress')}>In progress</button>}
-              {n.status !== 'done' && <button className="btn sm primary" disabled={busyId === n.id} onClick={() => setStatus(n, 'done')}>Done</button>}
+              {n.status !== 'done' && <button className="btn sm" disabled={busyId === n.id} onClick={() => setStatus(n, 'done')}>Done</button>}
               {n.status !== 'dismissed' && <button className="btn sm danger" disabled={busyId === n.id} onClick={() => setStatus(n, 'dismissed')}>Dismiss</button>}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

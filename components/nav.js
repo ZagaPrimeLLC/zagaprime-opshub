@@ -11,6 +11,7 @@ const I = {
   databases: <><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8" /><path d="M4.5 5.5v13c0 1.6 3.4 2.8 7.5 2.8s7.5-1.2 7.5-2.8v-13M4.5 12c0 1.6 3.4 2.8 7.5 2.8s7.5-1.2 7.5-2.8" /></>,
   domains: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z" /></>,
   news: <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM18.5 15.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" />,
+  brief: <><path d="M5 4h11a2 2 0 0 1 2 2v12a2.5 2.5 0 0 0 2.5 2.5H7A2.5 2.5 0 0 1 4.5 18V5A1 1 0 0 1 5 4z" /><path d="M18 6.5h1.5a1 1 0 0 1 1 1V18a2.5 2.5 0 0 1-2.5 2.5M8 8.5h6M8 12h6M8 15.5h4" /></>,
   channel: <><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M10 9.5l5 2.5-5 2.5z" /></>,
 };
 
@@ -36,6 +37,7 @@ const GROUPS = [
   {
     label: 'Intelligence',
     links: [
+      { href: '/brief', label: 'Daily Brief', icon: 'brief' },
       { href: '/news', label: 'Stack updates', icon: 'news' },
       { href: '/channel', label: 'Channel', icon: 'channel' },
     ],

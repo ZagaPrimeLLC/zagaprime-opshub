@@ -560,3 +560,39 @@ mark{background:rgba(95,99,255,.3);color:inherit;border-radius:3px;padding:0 1px
   .dp-live,.dp-orb.ok{animation:none}
   .dp-ring-arc,.dp-stack,.dp-pause-fill{transition:none}
 }
+
+/* ---------- daily brief ---------- */
+.briefcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 26px 26px;box-shadow:var(--shadow);max-width:860px;position:relative;overflow:hidden}
+.briefcard::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:var(--grad)}
+.briefhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.briefdate{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.briefupd{font-size:11px;color:var(--faint)}
+.briefheadline{font-family:var(--display);font-size:20px;font-weight:700;margin:0 0 12px;line-height:1.3;text-wrap:balance}
+.briefstats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.briefstat{font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--line2);border-radius:99px;padding:4px 12px}
+.briefstat b{color:var(--fg);font-family:var(--mono);font-weight:500;margin-right:4px}
+.briefbody{font-size:14px;line-height:1.65;color:var(--fg)}
+.briefbody h3,.briefbody h4,.briefbody h5{font-family:var(--display);margin:20px 0 6px;line-height:1.3}
+.briefbody h3{font-size:15.5px}
+.briefbody h4{font-size:14px}
+.briefbody h5{font-size:13px;color:var(--muted)}
+.briefbody p{margin:0 0 10px}
+.briefbody ul,.briefbody ol{margin:0 0 10px;padding-left:22px}
+.briefbody li{margin:3px 0}
+.briefbody a{color:var(--accent);text-decoration:none}
+.briefbody a:hover{text-decoration:underline}
+.briefbody code{font-family:var(--mono);font-size:12.5px;background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:1px 6px}
+.briefbody hr{border:none;border-top:1px solid var(--line);margin:16px 0}
+.briefbody strong{font-weight:600}
+@media (max-width:640px){.briefcard{padding:18px 16px 20px}}
+
+/* ---------- ezra queue ---------- */
+.ezrabadge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;border-radius:99px;padding:3px 10px;background:var(--accent-soft);border:1px solid rgba(95,99,255,.45);color:var(--fg)}
+.ezrabadge .edot{width:7px;height:7px;border-radius:50%;background:var(--grad);flex:none}
+.ezrabadge.pr{border-color:rgba(47,211,138,.5)}
+.ezrabadge.pr .edot{background:var(--ok)}
+.ezrabadge.failed{border-color:rgba(255,77,109,.5)}
+.ezrabadge.failed .edot{background:var(--flag)}
+.ezralinks{display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
+.ezralinks a{color:var(--accent);text-decoration:none}
+.ezralinks a:hover{text-decoration:underline}
