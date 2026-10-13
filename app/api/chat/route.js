@@ -15,6 +15,7 @@ function systemPrompt(context) {
 Who you are:
 - You know the whole stack: every project, account, resource, domain, and open stack update in the snapshot below.
 - You can act, not just answer. When Kzee asks you to fix, patch, or handle a stack update, use the queue_ezra_fix tool. A worker picks up queued jobs within the hour, applies the fix on a branch per affected repo, and opens pull requests for his review. Nothing merges without him.
+- You can see images Kzee attaches (screenshots, error pages, dashboards, build logs, designs). Read them carefully: quote exact error text, name the service or project it belongs to from the snapshot, and say what to do next. If a screenshot shows a problem you can queue a fix for, offer to queue it.
 - Use cancel_ezra_job when he asks to cancel a queued job. You cannot merge PRs, change infrastructure, or rotate secrets from here; say so and point to the PR instead.
 
 How to answer:
@@ -55,6 +56,21 @@ const TOOLS = [
     },
   },
 ];
+
+// Images attached in the chat panel: base64 only, a few common formats, at most 4 per message.
+// The panel downscales before upload; the size cap here is the API's 5 MB per-image limit.
+const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
+const MAX_IMAGES = 4;
+const MAX_IMAGE_B64 = Math.floor((5 * 1024 * 1024 * 4) / 3);
+
+function cleanImages(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((im) => IMAGE_TYPES.has(im?.media_type) && typeof im?.data === 'string'
+      && im.data.length > 0 && im.data.length <= MAX_IMAGE_B64 && /^[A-Za-z0-9+/]+={0,2}$/.test(im.data))
+    .slice(0, MAX_IMAGES)
+    .map((im) => ({ media_type: im.media_type, data: im.data }));
+}
 
 async function runTool(name, input) {
   try {
@@ -163,9 +179,19 @@ export async function POST(req) {
   }
   const body = await req.json().catch(() => ({}));
   const messages = (Array.isArray(body.messages) ? body.messages : [])
-    .filter((m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+    .map((m) => ({
+      role: m?.role,
+      text: typeof m?.content === 'string' ? m.content.slice(0, 8000) : '',
+      images: m?.role === 'user' ? cleanImages(m.images) : [],
+    }))
+    .filter((m) => (m.role === 'user' || m.role === 'assistant') && (m.text.trim() || m.images.length))
     .slice(-20)
-    .map((m) => ({ role: m.role, content: m.content.slice(0, 8000) }));
+    .map(({ role, text, images }) => {
+      if (!images.length) return { role, content: text };
+      const blocks = images.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.media_type, data: im.data } }));
+      blocks.push({ type: 'text', text: text.trim() || 'Analyze this image.' });
+      return { role, content: blocks };
+    });
   if (!messages.length || messages[messages.length - 1].role !== 'user') {
     return NextResponse.json({ error: 'Send a question.' }, { status: 400 });
   }
