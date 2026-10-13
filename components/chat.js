@@ -5,10 +5,10 @@ import { ZpMark } from '@/components/logo';
 
 const SUGGESTIONS = [
   'What needs my attention today?',
+  'Fix the most urgent stack update',
+  'What are you working on right now?',
   'Which accounts and resources run Lebarty?',
-  'Summarize today’s AI news in 5 bullets',
   'Which domains have the weakest security scores?',
-  'What should I map from the unassigned list?',
 ];
 
 function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -104,12 +104,12 @@ export default function Chat() {
   return (
     <>
       {open && (
-        <div className="zp-chat" role="dialog" aria-label="ZP assistant">
+        <div className="zp-chat" role="dialog" aria-label="Ezra">
           <div className="zp-chat-head">
             <ZpMark size={26} id="zp-chat" />
             <div>
-              <div className="t">ZP Assistant</div>
-              <div className="s">Knows your projects, accounts, domains and today&apos;s news</div>
+              <div className="t">Ezra</div>
+              <div className="s">Your stack superagent: knows every project and queues fixes for your review</div>
             </div>
             <div className="x">
               {msgs.length > 0 && <button onClick={() => setMsgs([])}>Clear</button>}
@@ -119,8 +119,9 @@ export default function Chat() {
           <div className="zp-msgs" ref={listRef} onClick={onClickMsg}>
             {msgs.length === 0 && (
               <div className="zp-intro">
-                Ask me anything about <b>ZagaPrime</b>: which account hosts what, project status, domain health,
-                stack updates to act on, or what happened in tech and AI today. Links in my answers open the right page.
+                I&apos;m <b>Ezra</b>. Ask me anything about the ZagaPrime stack: which account hosts what, project status,
+                domain health, or today&apos;s news. Tell me to fix a stack update and I&apos;ll queue it, patch the affected
+                repos on a branch, and open PRs for your review. Links in my answers open the right page.
               </div>
             )}
             {msgs.map((m, i) => (
@@ -142,7 +143,7 @@ export default function Chat() {
             <textarea
               id="zp-chat-input"
               value={input}
-              placeholder="Ask about a project, account, domain or today's news…"
+              placeholder="Ask anything, or tell Ezra what to fix…"
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
             />
@@ -150,9 +151,9 @@ export default function Chat() {
           </form>
         </div>
       )}
-      <button className="zp-fab" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label="Ask the ZP assistant">
+      <button className="zp-fab" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label="Talk to Ezra">
         <span className="orb"><ZpMark size={18} id="zp-fab" /></span>
-        <span className="lbl">{open ? 'Close' : 'Ask ZP'}</span>
+        <span className="lbl">{open ? 'Close' : 'Ezra'}</span>
       </button>
     </>
   );
