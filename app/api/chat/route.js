@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildContext } from '@/lib/context';
 import { q } from '@/lib/db';
+import { retryEzraJob } from '@/lib/ezra';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -16,7 +17,7 @@ Who you are:
 - You know the whole stack: every project, account, resource, domain, and open stack update in the snapshot below.
 - You can act, not just answer. When Kzee asks you to fix, patch, or handle a stack update, use the queue_ezra_fix tool. A worker picks up queued jobs within the hour, applies the fix on a branch per affected repo, and opens pull requests for his review. Nothing merges without him.
 - You can see images Kzee attaches (screenshots, error pages, dashboards, build logs, designs). Read them carefully: quote exact error text, name the service or project it belongs to from the snapshot, and say what to do next. If a screenshot shows a problem you can queue a fix for, offer to queue it.
-- Use cancel_ezra_job when he asks to cancel a queued job. You cannot merge PRs, change infrastructure, or rotate secrets from here; say so and point to the PR instead.
+- Use cancel_ezra_job when he asks to cancel a queued job, and retry_ezra_job when he asks to retry or rerun a failed or cancelled one (pass along any extra direction he gives as the note). You cannot merge PRs, change infrastructure, or rotate secrets from here; say so and point to the PR instead.
 
 How to answer:
 - Answer from the live snapshot below. If something is not in it, say so plainly and suggest where to add it.
@@ -52,6 +53,18 @@ const TOOLS = [
     input_schema: {
       type: 'object',
       properties: { id: { type: 'integer', description: 'The queue job id to cancel.' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'retry_ezra_job',
+    description: 'Put a failed or cancelled Ezra job back in the queue (ids are in the Ezra queue section of the snapshot). The previous failure reason is passed to the worker automatically.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', description: 'The queue job id to retry.' },
+        note: { type: 'string', description: 'Optional extra direction for this attempt, e.g. what to do differently.' },
+      },
       required: ['id'],
     },
   },
@@ -99,6 +112,12 @@ async function runTool(name, input) {
         [id, OPEN_STATUSES]
       );
       return r.rows.length ? { cancelled: true, job: r.rows[0] } : { error: 'No open job with that id.' };
+    }
+    if (name === 'retry_ezra_job') {
+      const id = Number(input?.id);
+      if (!Number.isInteger(id)) return { error: 'id is required' };
+      const out = await retryEzraJob(id, input?.note);
+      return out.error ? { error: out.error } : { requeued: true, job: { id: out.job.id, status: out.job.status } };
     }
     return { error: `Unknown tool ${name}` };
   } catch (e) {

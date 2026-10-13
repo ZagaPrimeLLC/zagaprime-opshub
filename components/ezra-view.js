@@ -38,7 +38,7 @@ function PrLinks({ links }) {
   );
 }
 
-function Job({ job, item, onCancel, busy }) {
+function Job({ job, item, onCancel, onRetry, busy }) {
   const kind = job.status === 'pr-open' ? ' pr' : job.status === 'failed' ? ' failed' : '';
   return (
     <div className="newsitem">
@@ -66,6 +66,14 @@ function Job({ job, item, onCancel, busy }) {
       {job.status === 'queued' && (
         <div className="newsbtns">
           <button className="btn sm" disabled={busy} onClick={() => onCancel(job)}>Cancel</button>
+        </div>
+      )}
+      {(job.status === 'failed' || job.status === 'cancelled') && (
+        <div className="newsbtns">
+          <button className="btn sm primary" disabled={busy} onClick={() => onRetry(job)}
+            title="Put this job back in the queue. The previous failure reason is passed to Ezra.">
+            ↻ {job.status === 'failed' ? 'Retry' : 'Requeue'}
+          </button>
         </div>
       )}
     </div>
@@ -107,6 +115,23 @@ export default function EzraView({ initial }) {
     setBusyId(null);
   }
 
+  async function retry(job) {
+    // null = the dialog was dismissed; an empty string retries without a note.
+    const note = window.prompt('Retry this job. Anything Ezra should do differently? (optional)', '');
+    if (note === null) return;
+    setBusyId(job.id); setErr('');
+    try {
+      const res = await fetch('/api/ezra/queue', {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: job.id, retry: true, note }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not retry');
+      setJobs((js) => js.map((j) => (j.id === data.job.id ? data.job : j)));
+    } catch (e) { setErr(e.message); }
+    setBusyId(null);
+  }
+
   const active = jobs.filter((j) => ACTIVE.includes(j.status));
   const review = jobs.filter((j) => j.status === 'pr-open');
   const history = jobs.filter((j) => !ACTIVE.includes(j.status) && j.status !== 'pr-open').slice(0, 30);
@@ -117,7 +142,7 @@ export default function EzraView({ initial }) {
       <h2 className="ezrah">{title} <span className="mono">{list.length}</span></h2>
       <div className="newslist">
         {list.length === 0 && <div className="empty">{empty}</div>}
-        {list.map((j) => <Job key={j.id} job={j} item={newsBy[j.news_id]} onCancel={cancel} busy={busyId === j.id} />)}
+        {list.map((j) => <Job key={j.id} job={j} item={newsBy[j.news_id]} onCancel={cancel} onRetry={retry} busy={busyId === j.id} />)}
       </div>
     </section>
   );

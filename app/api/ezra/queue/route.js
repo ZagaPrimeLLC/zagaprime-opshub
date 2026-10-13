@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { q } from '@/lib/db';
 import { SCHEMA } from '@/lib/entities';
+import { retryEzraJob } from '@/lib/ezra';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,6 +92,17 @@ export async function PATCH(req) {
   const body = await req.json().catch(() => ({}));
   const id = Number(body.id);
   if (!Number.isInteger(id)) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  // { id, retry: true, note? } puts a failed or cancelled job back in the queue.
+  if (body.retry === true) {
+    try {
+      const out = await retryEzraJob(id, body.note);
+      if (out.error) return NextResponse.json({ error: out.error }, { status: out.status });
+      return NextResponse.json({ ok: true, job: out.job });
+    } catch (e) {
+      if (missingTable(e)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return fail(e);
+    }
+  }
   const sets = [];
   const vals = [];
   if (body.status !== undefined) {
