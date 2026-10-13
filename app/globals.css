@@ -607,3 +607,12 @@ mark{background:rgba(95,99,255,.3);color:inherit;border-radius:3px;padding:0 1px
 .ezralinks{display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
 .ezralinks a{color:var(--accent);text-decoration:none}
 .ezralinks a:hover{text-decoration:underline}
+
+/* ---------- ezra activity page ---------- */
+.ezrastats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.briefstat.warn{border-color:rgba(255,77,109,.5)}
+.ezrasection{margin:0 0 22px}
+.ezrah{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.ezrah .mono{font-size:12px;color:var(--faint);font-weight:500}
+.ezrajobid{font-size:11px;color:var(--faint)}
+.ezraresult{font-size:13px;border-top:1px solid var(--line);padding-top:8px}

@@ -28,9 +28,21 @@ async function ensureTable() {
 const missingTable = (e) => e?.code === '42P01';
 const fail = (e) => NextResponse.json({ error: e.message }, { status: e.code === 'NO_DB_URL' ? 503 : 500 });
 
+// When the Ezra worker (agent token) polls, record the time so the Ezra page can show the worker is alive.
+async function recordWorkerCheck(req) {
+  const token = process.env.NEWS_INGEST_TOKEN;
+  if (!token || req.headers.get('authorization') !== `Bearer ${token}`) return;
+  const now = new Date().toISOString();
+  try {
+    const r = await q(`update ${SCHEMA}.kb set content = $1 where key = 'ezra.last_check'`, [now]);
+    if (!r.rowCount) await q(`insert into ${SCHEMA}.kb (key, content) values ('ezra.last_check', $1)`, [now]);
+  } catch {}
+}
+
 // GET: ?status=queued|open|all (default open), newest first.
 export async function GET(req) {
   const status = new URL(req.url).searchParams.get('status') || 'open';
+  await recordWorkerCheck(req);
   try {
     let r;
     if (status === 'all') r = await q(`select * from ${SCHEMA}.ezra_queue order by requested_at desc limit 100`);
