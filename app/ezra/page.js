@@ -2,6 +2,7 @@ import { q } from '@/lib/db';
 import { SCHEMA } from '@/lib/entities';
 import SetupNotice from '@/components/setup';
 import EzraView from '@/components/ezra-view';
+import { syncEzraPrs } from '@/lib/ezra-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,8 @@ export default async function EzraPage() {
   let jobs = [];
   let news = [];
   let lastCheck = null;
+  // Pick up merged/closed PRs before rendering (throttled; a GitHub hiccup never blocks the page).
+  await syncEzraPrs().catch(() => {});
   try {
     [jobs, news, lastCheck] = await Promise.all([
       q(`select * from ${SCHEMA}.ezra_queue order by requested_at desc limit 100`)

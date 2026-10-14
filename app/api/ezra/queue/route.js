@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { q } from '@/lib/db';
 import { SCHEMA } from '@/lib/entities';
 import { retryEzraJob } from '@/lib/ezra';
+import { syncEzraPrs } from '@/lib/ezra-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,8 @@ async function recordWorkerCheck(req) {
 export async function GET(req) {
   const status = new URL(req.url).searchParams.get('status') || 'open';
   await recordWorkerCheck(req);
+  // Each poll also reconciles PRs Kzee has merged or closed (throttled to once a minute).
+  await syncEzraPrs().catch(() => {});
   try {
     let r;
     if (status === 'all') r = await q(`select * from ${SCHEMA}.ezra_queue order by requested_at desc limit 100`);

@@ -32,13 +32,19 @@ function PrLinks({ links }) {
       {links.map((l, i) => {
         const href = typeof l === 'string' ? l : l?.url;
         const label = typeof l === 'string' ? l.replace(/^https?:\/\/(www\.)?/, '') : (l?.label || l?.url);
-        return href ? <a key={i} href={href} target="_blank" rel="noopener noreferrer">{label} <Ext /></a> : null;
+        const state = typeof l === 'object' ? l?.state : null;
+        return href ? (
+          <span key={i} className="ezralink">
+            <a href={href} target="_blank" rel="noopener noreferrer">{label} <Ext /></a>
+            {state && state !== 'unknown' && <span className={`prstate ${state}`}>{state}</span>}
+          </span>
+        ) : null;
       })}
     </div>
   );
 }
 
-function Job({ job, item, onCancel, onRetry, busy }) {
+function Job({ job, item, onCancel, onRetry, onDone, busy }) {
   const kind = job.status === 'pr-open' ? ' pr' : job.status === 'failed' ? ' failed' : '';
   return (
     <div className="newsitem">
@@ -68,6 +74,14 @@ function Job({ job, item, onCancel, onRetry, busy }) {
           <button className="btn sm" disabled={busy} onClick={() => onCancel(job)}>Cancel</button>
         </div>
       )}
+      {job.status === 'pr-open' && (
+        <div className="newsbtns">
+          <button className="btn sm" disabled={busy} onClick={() => onDone(job)}
+            title="Use when GitHub can't report the outcome (e.g. a Base44 preview) or you handled it another way">
+            ✓ Mark done
+          </button>
+        </div>
+      )}
       {(job.status === 'failed' || job.status === 'cancelled') && (
         <div className="newsbtns">
           <button className="btn sm primary" disabled={busy} onClick={() => onRetry(job)}
@@ -86,6 +100,8 @@ export default function EzraView({ initial }) {
   const [busyId, setBusyId] = useState(null);
   const [err, setErr] = useState('');
   const [, tick] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
 
   const newsBy = useMemo(() => Object.fromEntries(initial.news.map((n) => [n.id, n])), [initial.news]);
 
@@ -110,6 +126,38 @@ export default function EzraView({ initial }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not cancel');
+      setJobs((js) => js.map((j) => (j.id === data.job.id ? data.job : j)));
+    } catch (e) { setErr(e.message); }
+    setBusyId(null);
+  }
+
+  async function refresh() {
+    const res = await fetch('/api/ezra/queue?status=all', { cache: 'no-store' });
+    if (res.ok) { const d = await res.json(); if (Array.isArray(d.jobs)) setJobs(d.jobs); }
+  }
+
+  async function syncGithub() {
+    setSyncing(true); setErr(''); setSyncMsg('');
+    try {
+      const res = await fetch('/api/ezra/sync', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Sync failed');
+      setSyncMsg(data.updated ? `${data.updated} job${data.updated > 1 ? 's' : ''} updated from GitHub.` : `Checked ${data.checked} open PR job${data.checked === 1 ? '' : 's'}; nothing merged or closed yet.`);
+      await refresh();
+    } catch (e) { setErr(e.message); }
+    setSyncing(false);
+  }
+
+  async function markDone(job) {
+    if (!window.confirm(`Mark job ${job.id} as done?`)) return;
+    setBusyId(job.id); setErr('');
+    try {
+      const res = await fetch('/api/ezra/queue', {
+        method: 'PATCH', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: job.id, status: 'done' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not update');
       setJobs((js) => js.map((j) => (j.id === data.job.id ? data.job : j)));
     } catch (e) { setErr(e.message); }
     setBusyId(null);
@@ -142,7 +190,7 @@ export default function EzraView({ initial }) {
       <h2 className="ezrah">{title} <span className="mono">{list.length}</span></h2>
       <div className="newslist">
         {list.length === 0 && <div className="empty">{empty}</div>}
-        {list.map((j) => <Job key={j.id} job={j} item={newsBy[j.news_id]} onCancel={cancel} onRetry={retry} busy={busyId === j.id} />)}
+        {list.map((j) => <Job key={j.id} job={j} item={newsBy[j.news_id]} onCancel={cancel} onRetry={retry} onDone={markDone} busy={busyId === j.id} />)}
       </div>
     </section>
   );
@@ -160,7 +208,12 @@ export default function EzraView({ initial }) {
         <span className={`briefstat${stale ? ' warn' : ''}`}>
           worker last checked: <b>{lastCheck ? ago(lastCheck) : 'not yet'}</b>
         </span>
+        <button className="btn sm" onClick={syncGithub} disabled={syncing}
+          title="Check Ezra's open PRs on GitHub now: merged → done, closed → cancelled">
+          {syncing ? 'Syncing…' : '⟳ Sync with GitHub'}
+        </button>
       </div>
+      {syncMsg && <p className="ezrasyncmsg">{syncMsg}</p>}
       {err && <p style={{ color: 'var(--flag)', fontSize: 13 }}>{err}</p>}
       {section('Ready for your review', review, 'No PRs waiting on you.')}
       {section('Active', active, 'Nothing queued or in progress. Ask Ezra to fix something, or use ✦ Fix with Ezra on a stack update.')}

@@ -616,3 +616,11 @@ mark{background:rgba(95,99,255,.3);color:inherit;border-radius:3px;padding:0 1px
 .ezrah .mono{font-size:12px;color:var(--faint);font-weight:500}
 .ezrajobid{font-size:11px;color:var(--faint)}
 .ezraresult{font-size:13px;border-top:1px solid var(--line);padding-top:8px}
+
+.ezrastats .btn{margin-left:auto}
+.ezrasyncmsg{font-size:12.5px;color:var(--muted);margin:-8px 0 14px}
+.ezralink{display:inline-flex;align-items:center;gap:6px}
+.prstate{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border-radius:99px;padding:1px 7px;border:1px solid var(--line2);color:var(--muted)}
+.prstate.merged{border-color:rgba(165,44,255,.55);color:#c48bff}
+.prstate.open{border-color:rgba(47,211,138,.5);color:var(--ok)}
+.prstate.closed{border-color:rgba(255,77,109,.5);color:var(--flag)}
